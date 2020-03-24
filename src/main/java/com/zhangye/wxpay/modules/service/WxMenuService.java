@@ -37,4 +37,6 @@ public interface WxMenuService {
      * @return
      */
     String wxCloseOrder(String orderNo, String signType) throws Exception;
+    
+    String iotpay(Order order, String channelid, String signType) throws Exception;
 }

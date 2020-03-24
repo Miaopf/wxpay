@@ -6,7 +6,7 @@ package com.zhangye.wxpay.modules.common.wx;
  * @description 微信公众号常量类
  * @date 2019/12/19
  */
-public class WxConstants {
+public class IoPayConstants {
 
     /**
      * 默认编码
@@ -40,7 +40,7 @@ public class WxConstants {
     /**
      * 返回状态码
      */
-    public final static String RETURN_CODE = "return_code";
+    public final static String RETURN_CODE = "retCode";
 
     /**
      * access_token 字符串

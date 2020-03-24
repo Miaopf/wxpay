@@ -1,11 +1,15 @@
 package com.zhangye.wxpay.modules.service.impl;
 
 import com.zhangye.wxpay.modules.common.http.HttpsClient;
+import com.zhangye.wxpay.modules.common.wx.IoPayConstants;
+import com.zhangye.wxpay.modules.common.wx.IotopayConfig;
 import com.zhangye.wxpay.modules.common.wx.WxConfig;
 import com.zhangye.wxpay.modules.common.wx.WxConstants;
 import com.zhangye.wxpay.modules.common.wx.WxUtil;
 import com.zhangye.wxpay.modules.model.Order;
 import com.zhangye.wxpay.modules.service.WxMenuService;
+
+import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -124,5 +128,37 @@ public class WxMenuServiceImpl implements WxMenuService {
         }
         return null;
     }
+
+	@Override
+	public String iotpay(Order order, String channelid, String signType) throws Exception {
+		String order_sn =  WxUtil.getNonceStr();
+		String sceneInfo = "";
+		if(channelid != null && "WX_NATIVE".equals(channelid)) {
+			sceneInfo = "{\"productId\":\""+order_sn+"\"}";
+		}
+		HashMap<String, String> data = new HashMap<String, String>();
+        //商户号
+        data.put("mchId", IotopayConfig.mchId);
+        data.put("mchOrderNo", order_sn);
+        data.put("extra", sceneInfo);
+        data.put("channelId", channelid);
+        data.put("currency", "USD");
+        data.put("amount", String.valueOf(order.getTotalFee()));
+        data.put("device", "WEB");
+        data.put("notify_url", IotopayConfig.unifiedorderNotifyUrl);
+        data.put("subject", "subject"+order.getSubject());
+        data.put("body", "body"+order.getSubject());
+      //签名 签名中加入key
+        data.put("sign", WxUtil.getSignature(data, IotopayConfig.mchKey, signType));
+
+        String requestXML = WxUtil.mapToXml(data);
+        String responseString = HttpsClient.httpsRequestReturnString(IoPayConstants.PAY_UNIFIEDORDER, HttpsClient.METHOD_POST, requestXML);
+        //解析返回的xml
+        Map<String, String> resultMap = WxUtil.processResponseXml(responseString, signType);
+        if (resultMap.get(IoPayConstants.RETURN_CODE).equals("SUCCESS")) {
+            return resultMap.get("codeUrl");
+        }
+        return null;
+	}
 
 }
