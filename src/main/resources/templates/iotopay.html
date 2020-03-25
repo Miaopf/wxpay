@@ -6,14 +6,17 @@
     <script type="text/javascript" src="/js/jquery/jquery.timers-1.2.js"></script>
     <script type='text/javascript'>
 
-        $(function () {
-            
-        });
+    $(function () {
+        getOutTradeNo();
+    });
 
         function save() {
+        	var outTradeNo = $("#outTradeNo").val(); //订单号
             var totalFee = $("#totalFee").val(); //订单金额 单位为分
             var channelid = $("#channelid").val();//支付方式
-            $.ajax({
+          //生成二维码
+            $("#payImg").attr("src", '/iotopay/createorder' + "?totalFee=" + totalFee + "&outTradeNo=" + outTradeNo + "&channelid=" + channelid);
+            /* $.ajax({
                     type: "POST",
                     url: '/iotopay/createorder?totalFee=' + totalFee +'&channelid=' + channelid,
                     contentType: "application/json",
@@ -38,7 +41,53 @@
                         console.log(json.statusText);
                         return false;
                     }
-                })
+                }) */
+        }
+        
+      //获取测试订单流水号
+        function getOutTradeNo() {
+            $.ajax({
+                type: "POST",
+                url: '/iotopay/outTradeNo',
+                success: function (json) {
+                    if (json != null) {
+                        $("h3").html(json);
+                        $("#outTradeNo").val(json);
+                    } else {
+                        alert("获取流水号失败！");
+                    }
+                    return false;
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert("服务器错误！状态码：" + XMLHttpRequest.status);
+                    // 状态
+                    console.log(XMLHttpRequest.readyState);
+                    // 错误信息
+                    console.log(textStatus);
+                    return false;
+                }
+            });
+        }
+      
+      //查询订单
+        function queryOrder() {
+            var orderNo = $("#orderNo").val();
+            $.ajax({
+                type: "POST",
+                url: '/iotopay/orderQuery?orderNo=' + orderNo,
+                success: function (data) {
+                    alert(data);
+                    return false;
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert("服务器错误！状态码：" + XMLHttpRequest.status);
+                    // 状态
+                    console.log(XMLHttpRequest.readyState);
+                    // 错误信息
+                    console.log(textStatus);
+                    return false;
+                }
+            });
         }
 
     </script>
@@ -49,16 +98,28 @@
 <h3></h3></p>
 支付金额：<input id="totalFee" type="text" value="1"/> 分 &nbsp;
 <button type="button" onclick="save();">生成二维码</button>
+<input id="outTradeNo" type="hidden" value="${outTradeNo}"/>
+&nbsp;&nbsp;<img id="payImg" width="300" height="300">
+<br><br><br>
 <div class="form-group row">
 	<label for="channelid" class="col-md-3 col-form-label">Channel Id</label>
 	<div class="col-md-9">
 		<select class="form-control" id="channelid" name="channelid">
-			<option value="ALIPAY_PC">ALIPAY_PC</option>
-			<option value="ALIPAY_WAP">ALIPAY_WAP</option>
 			<option value="ALIPAY_QR">ALIPAY_QR</option>
 			<option value="WX_NATIVE">WX_NATIVE</option>
 		</select>
 	</div>
 </div>
+
+
+
+<p>查询订单：
+订单号<input id="orderNo" type="text" value=""/>
+<button type="button" onclick="queryOrder();">查询订单</button>
+<br/>
+
+<p>关闭订单：
+订单号<input id="orderNo2" type="text" value=""/>
+<button type="button" onclick="closeOrder();">关闭订单</button>
 </body>
 </html>

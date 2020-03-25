@@ -39,7 +39,7 @@ public class IotopayConfig {
      * 统一下单-通知链接
      */
     public static String unifiedorderNotifyUrl;
-    @Value("${wx.unifiedorder.notifyUrl}")
+    @Value("${iotopay.unifiedorder.notifyUrl}")
     public void setUnifiedorderNotifyUrl(String unifiedorderNotifyUrl) {
         this.unifiedorderNotifyUrl = unifiedorderNotifyUrl;
     }

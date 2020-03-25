@@ -21,8 +21,8 @@ import java.util.Map;
  * @description 微信支付实现类
  * @date 2019/12/19
  */
-@Service("wxMenuService")
-public class WxMenuServiceImpl implements WxMenuService {
+@Service("IotpayMenuService")
+public class IotpayMenuServiceImpl implements WxMenuService {
 
     @Override
     public String wxPayUrl(Order order, String signType) throws Exception {
@@ -67,35 +67,24 @@ public class WxMenuServiceImpl implements WxMenuService {
     @Override
     public String wxOrderQuery(String orderNo, String signType) throws Exception {
         HashMap<String, String> data = new HashMap<String, String>();
-        //公众账号ID
-        data.put("appid", WxConfig.appID);
         //商户号
-        data.put("mch_id", WxConfig.mchID);
+        data.put("mchId", IotopayConfig.mchId);
         //随机字符串
-        data.put("nonce_str", WxUtil.getNonceStr());
+        data.put("payOrderId", "");
         //商户订单号
-        data.put("out_trade_no", orderNo);
+        data.put("mchOrderNo", orderNo);
         //签名类型
         data.put("sign_type", signType);
         //签名 签名中加入key
-        data.put("sign", WxUtil.getSignature(data, WxConfig.key, signType));
-        String requestXML = WxUtil.mapToXml(data);
-        String responseString = HttpsClient.httpsRequestReturnString(WxConstants.PAY_ORDERQUERY, HttpsClient.METHOD_POST, requestXML);
-        //解析返回的xml
-        Map<String, String> resultMap = WxUtil.processResponseXml(responseString, signType);
-        if (resultMap.get(WxConstants.RETURN_CODE).equals("SUCCESS")) {
-            /**
-             * 订单支付状态
-             * SUCCESS—支付成功
-             * REFUND—转入退款
-             * NOTPAY—未支付
-             * CLOSED—已关闭
-             * REVOKED—已撤销（刷卡支付）
-             * USERPAYING--用户支付中
-             * PAYERROR--支付失败(其他原因，如银行返回失败)
-             */
-            return resultMap.get("trade_state");
-        }
+        data.put("sign", WxUtil.getSignature(data, IotopayConfig.mchKey, signType));
+        JSONObject json = new JSONObject(data);
+        String responseString = HttpsClient.httpPost(IoPayConstants.PAY_ORDERQUERY, json.toString());
+        System.out.println(responseString);
+        JSONObject d = new JSONObject(responseString);
+		if (d.get(IoPayConstants.RETURN_CODE).equals("SUCCESS")) {
+			JSONObject result = d.getJSONObject("result");
+		    return result.get("status") + "";
+		}
         return null;
     }
 
@@ -143,7 +132,7 @@ public class WxMenuServiceImpl implements WxMenuService {
 			data.put("mchOrderNo", order.getOrderNo());
 			data.put("extra", sceneInfo);
 			data.put("channelId", channelid);
-			data.put("currency", "USD");
+			data.put("currency", "CAD");
 			data.put("amount", String.valueOf(order.getTotalFee()));
 			data.put("clientIp", order.getClintIp());
 			data.put("device", "WEB");
@@ -157,14 +146,18 @@ public class WxMenuServiceImpl implements WxMenuService {
 			JSONObject json = new JSONObject(data);
 			String param = "param="+json.toString();
 			System.out.println(param);
-			String requestXML = WxUtil.mapToXml(data);
-			//String responseString = HttpsClient.httpsRequestReturnString(IoPayConstants.PAY_UNIFIEDORDER, HttpsClient.METHOD_POST, param);
 			String responseString = HttpsClient.httpPost(IoPayConstants.PAY_UNIFIEDORDER, json.toString());
 			System.out.println(responseString);
 			//解析返回的xml
 			JSONObject result = new JSONObject(responseString);
-			if (result.get(IoPayConstants.RETURN_CODE).equals("SUCCESS")) {
-			    return (String) result.get("codeUrl");
+			if (result.get(IoPayConstants.RETURN_CODE).equals("SUCCESS") || result.get(IoPayConstants.RES_CODE).equals("SUCCESS")) {
+				// 区分微信和支付宝
+				switch(channelid){
+					case "ALIPAY_QR":
+						return (String) result.get("qr_code");
+					case "WX_NATIVE":
+						return (String) result.get("codeUrl");
+				}
 			}
 			return null;
 		} catch (Exception e) {

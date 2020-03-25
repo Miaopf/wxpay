@@ -21,7 +21,7 @@ public class IoPayConstants {
     /**
      * 统一下单-查询订单
      */
-    public static String PAY_ORDERQUERY = "https://api.mch.weixin.qq.com/pay/orderquery";
+    public static String PAY_ORDERQUERY = "http://pay.4jicao.com/api/pay/query_order";
 
     /**
      * 统一下单-关闭订单
@@ -41,6 +41,11 @@ public class IoPayConstants {
      * 返回状态码
      */
     public final static String RETURN_CODE = "retCode";
+    
+    /**
+     * 返回状态码
+     */
+    public final static String RES_CODE = "resCode";
 
     /**
      * access_token 字符串

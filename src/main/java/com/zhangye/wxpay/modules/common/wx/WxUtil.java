@@ -1,5 +1,6 @@
 package com.zhangye.wxpay.modules.common.wx;
 
+import com.alibaba.fastjson.JSONObject;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
@@ -295,6 +296,22 @@ public class WxUtil {
             throw ex;
         }
     }
+    
+    /**
+     * XML格式字符串转换为Map
+     *
+     * @param strXML XML字符串
+     * @return XML数据转换后的Map
+     * @throws Exception
+     */
+	public static Map<String, String> stringToMap(String str) throws Exception {
+		Map<String, String> data = new HashMap<String, String>();
+		JSONObject jsonObject = JSONObject.parseObject(str);
+		for (Object map : jsonObject.entrySet()) {
+			data.put((String)((Map.Entry) map).getKey(), (String)((Map.Entry) map).getValue());
+		}
+		return data;
+	}
 
     /**
      * 判断xml数据的sign是否有效，必须包含sign字段，否则返回false。
